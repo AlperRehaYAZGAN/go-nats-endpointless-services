@@ -1,0 +1,57 @@
+# simple docker-compose.yml file for nats redis
+version: '3'
+services:
+  # Nats broker
+  natsservice:
+    image: nats:2.6.6-alpine3.14
+    networks:
+      - alyafnnet
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    volumes:
+      - ./volumes/nats:/data
+    restart: always
+  # "hello-endpointless" Go application inside ./hello-endpointless directory
+  # Dockerfile is in ./hello-endpointless/Dockerfile
+  helloworld:
+    build:
+      context: ./hello-endpointless
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+    ports:
+      - "9090:9090"
+    restart: always
+  # "jwt-service" Go application inside ./jwt-service directory
+  # Dockerfile is in ./jwt-service/Dockerfile
+  jwtservice_1:
+    build:
+      context: ./jwt-service
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+      - JWT_SECRET=secret
+    restart: always
+  jwtservice_2:
+    build:
+      context: ./jwt-service
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+      - JWT_SECRET=secret
+    restart: always
+
+
+# network: alyafnnet
+networks:
+  alyafnnet:
+    name: alyafnnet
+    driver: bridge
