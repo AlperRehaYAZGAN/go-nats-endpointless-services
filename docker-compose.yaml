@@ -40,7 +40,7 @@ services:
       - NATS_SERVER_URL=nats://natsservice:4222
       - JWT_SECRET=secret
     volumes:
-      - ./hello-endpointless/.env.test:/app/.env.test
+      - ./jwt-service/.env.test:/app/.env.test
     restart: always
   jwtservice_2:
     build:
@@ -52,7 +52,7 @@ services:
       - NATS_SERVER_URL=nats://natsservice:4222
       - JWT_SECRET=secret
     volumes:
-      - ./hello-endpointless/.env.test:/app/.env.test
+      - ./jwt-service/.env.test:/app/.env.test
     restart: always
 
 
