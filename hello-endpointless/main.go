@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -73,18 +74,18 @@ func main() {
 	})
 
 	r.GET("/decrypt", func(ctx *gin.Context) {
-		// get jwt from auth header
-		jwt := ctx.GetHeader("Authorization")
-		if jwt == "" {
+		// get jwt from auth Bearer header
+		jwtHeader := ctx.GetHeader("Authorization")
+		if !(strings.HasPrefix(jwtHeader, "Bearer ")) {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status":  false,
 				"type":    "jwt-header-missing",
 				"message": "Jwt is empty!",
 			})
-			return
 		}
+		jwtHeader = strings.TrimPrefix(jwtHeader, "Bearer ")
 		// Nats request reply to decrypt message with 5 sec timeout
-		ncReply, err := nc.Request("jwt.validate", []byte(jwt), time.Second*5)
+		ncReply, err := nc.Request("jwt.validate", []byte(jwtHeader), time.Second*5)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
@@ -96,7 +97,7 @@ func main() {
 		}
 
 		// if ncReply.Data starts with "error" then it's an error
-		if string(ncReply.Data)[:5] == "error" {
+		if strings.HasPrefix(string(ncReply.Data), "error") {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status":  false,
 				"type":    "jwt-validate-from-jwt-service",
